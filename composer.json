@@ -1,5 +1,5 @@
 {
-  "name": "kodumbeats/acme-utopia",
+  "name": "utopia-php/acme",
   "description": "A simple LetsEncrypt ACME client using Utopia Storage",
   "type": "library",
   "keywords": [
@@ -20,12 +20,10 @@
   ],
   "autoload": {
     "psr-4": {
-      "Kodumbeats\\Acme\\": "./src"
+      "Utopia\\Acme\\": "./src"
     }
   },
   "require": {
-    "guzzlehttp/guzzle": "^6.3|^7.0",
-    "league/flysystem": "^1.0",
     "ext-openssl": "*",
     "ext-json": "*"
   }
