@@ -20,12 +20,12 @@ useful in case you need to dynamically fetch and install certificates.
 
 - PHP7+
 - openssl
-- [Flysystem](http://flysystem.thephpleague.com/) (any adapter would do) - to store the Lets Encrypt account information
+- [Utopia Storage](https://github.com/utopia-php/storage) (any adapter would do) - to store the Lets Encrypt account information
 
 
 ## Getting started
 
-Getting started is easy. First install the client, then you need to construct a flysystem filesystem, instantiate the 
+Getting started is easy. First install the client, then you need to construct a Utopia Storage device, instantiate the 
 client and you can start requesting certificates.
 
 ### Installation
@@ -37,23 +37,24 @@ composer require afosto/yaac
 
 ### Instantiate the client
 
-To start the client you need 3 things; a username for your Let’s Encrypt account, a bootstrapped Flysystem and you need to 
+To start the client you need 3 things; a username for your Let’s Encrypt account, a Utopia Storage device, and you need to 
 decide whether you want to issue `Fake LE Intermediate X1` (staging: `MODE_STAGING`) or `Let's Encrypt Authority X3` 
 (live: `MODE_LIVE`, use for production) certificates.
 
 ```php
-use League\Flysystem\Filesystem;
-use League\Flysystem\Adapter\Local;
 use Afosto\Acme\Client;
+use Utopia\Storage\Storage;
+use Utopia\Storage\Device\Local;
  
-//Prepare flysystem
-$adapter = new Local('data');
-$filesystem = new Filesystem($adapter);
+// Prepare Utopia Storage
+Storage::setDevice('certificates', new Local('certificates'));
+
+$device = Storage::getDevice('certificates');
  
-//Construct the client
+// Construct the client
 $client = new Client([
     'username' => 'example@example.org',
-    'fs'       => $filesystem,
+    'device'       => $device,
     'mode'     => Client::MODE_STAGING,
 ]);
 ```

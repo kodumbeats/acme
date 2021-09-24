@@ -10,7 +10,7 @@ use Afosto\Acme\Data\Order;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\RequestException;
-use League\Flysystem\Filesystem;
+use Utopia\Storage\Device;
 use Psr\Http\Message\ResponseInterface;
 
 class Client
@@ -81,9 +81,9 @@ class Client
     protected $accountKey;
 
     /**
-     * @var Filesystem
+     * @var Device
      */
-    protected $filesystem;
+    protected $storageDevice;
 
     /**
      * @var array
@@ -116,7 +116,7 @@ class Client
      * @param array $config
      *
      * @type string $mode The mode for ACME (production / staging)
-     * @type Filesystem $fs Filesystem for storage of static data
+     * @type Device $device Utopia Storage device
      * @type string $basePath The base path for the filesystem (used to store account information and csr / keys
      * @type string $username The acme username
      * @type string $source_ip The source IP for Guzzle (via curl.options) to bind to (defaults to 0.0.0.0 [OS default])
@@ -125,10 +125,10 @@ class Client
     public function __construct($config = [])
     {
         $this->config = $config;
-        if ($this->getOption('fs', false)) {
-            $this->filesystem = $this->getOption('fs');
+        if ($this->getOption('device', false)) {
+            $this->storageDevice = $this->getOption('device');
         } else {
-            throw new \LogicException('No filesystem option supplied');
+            throw new \LogicException('No storage device supplied');
         }
 
         if ($this->getOption('username', false) === false) {
@@ -355,7 +355,7 @@ class Client
             )
         );
 
-        $data = json_decode((string)$response->getBody(), true);
+        $data = \json_decode((string)$response->getBody(), true);
         $accountURL = $response->getHeaderLine('Location');
         $date = (new \DateTime())->setTimestamp(strtotime($data['createdAt']));
         return new Account($data['contact'], $date, ($data['status'] == 'valid'), $data['initialIp'], $accountURL);
@@ -479,7 +479,7 @@ class Client
     {
         //Load the directories from the LE api
         $response = $this->getHttpClient()->get('/directory');
-        $result = \GuzzleHttp\json_decode((string)$response->getBody(), true);
+        $result = \json_decode((string)$response->getBody(), true);
         $this->directories = $result;
 
         //Prepare LE account
@@ -491,16 +491,14 @@ class Client
     /**
      * Load the keys in memory
      *
-     * @throws \League\Flysystem\FileExistsException
-     * @throws \League\Flysystem\FileNotFoundException
      */
     protected function loadKeys()
     {
         //Make sure a private key is in place
-        if ($this->getFilesystem()->has($this->getPath('account.pem')) === false) {
-            $this->getFilesystem()->write($this->getPath('account.pem'), Helper::getNewKey());
+        if ($this->getStorageDevice()->exists($this->getPath('account.pem')) === false) {
+            $this->getStorageDevice()->write($this->getPath('account.pem'), Helper::getNewKey());
         }
-        $privateKey = $this->getFilesystem()->read($this->getPath('account.pem'));
+        $privateKey = $this->getStorageDevice()->read($this->getPath('account.pem'));
         $privateKey = openssl_pkey_get_private($privateKey);
         $this->privateKeyDetails = openssl_pkey_get_details($privateKey);
     }
@@ -543,12 +541,12 @@ class Client
     }
 
     /**
-     * Return the Flysystem filesystem
-     * @return Filesystem
+     * Return the storage device
+     * @return Device
      */
-    protected function getFilesystem(): Filesystem
+    protected function getStorageDevice(): Device
     {
-        return $this->filesystem;
+        return $this->storageDevice;
     }
 
     /**
@@ -635,7 +633,7 @@ class Client
     protected function getAccountKey()
     {
         if ($this->accountKey === null) {
-            $this->accountKey = openssl_pkey_get_private($this->getFilesystem()
+            $this->accountKey = openssl_pkey_get_private($this->getStorageDevice()
                 ->read($this->getPath('account.pem')));
         }
 
