@@ -2,6 +2,8 @@
 
 Written in PHP, this client aims to be a simplified and decoupled Let’s Encrypt client, based on [ACME V2](https://tools.ietf.org/html/rfc8555).
 
+Fork of [afosto/yaac](https://github.com/afosto/yaac).
+
 ## Decoupled from a filesystem or webserver
 
 Instead of, for example writing the certificate to the disk under an nginx configuration, this client just returns the 
@@ -202,10 +204,3 @@ file_put_contents('private.key', $certificate->getPrivateKey());
 >$intermediateCertificate = $certificate->getIntermediate();
 >```
 
-### Who is using it?
-
-Are you using this package, would love to know. Please send a PR to enlist your project or company. 
-- [Afosto SaaS BV](https://afosto.com)
-- [Web Whales](https://webwhales.nl)
-- [do.de](https://www.do.de)
-- [punchsalad.com](https://punchsalad.com/ssl-certificate-generator/)
